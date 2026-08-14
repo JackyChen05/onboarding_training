@@ -1,6 +1,7 @@
 import { defineConfig } from 'vitepress'
 
 export default defineConfig({
+  base: '/onboarding_training/',
   title: '嵌入式产品测试 · 应届生培训',
   description: '软件测试工程师入职培训学习站',
   lang: 'zh-CN',
