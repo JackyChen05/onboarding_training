@@ -32,4 +32,4 @@ ONU 侧通过 DBA 报告（status report）告诉 OLT 自己的队列里有多�
 ## 扩展阅读（ima 测试知识库）
 
 - 《PON基础知识培训》—— 应届生培训文档(2025)，DBA 原理图解
-- 《PON上线配置及TestCenter测试组播方法介绍》- 杜琴 —— OLT 上 DBA profile 配置实操
+- 《PON上线配置及TestCenter测试组播方法介绍》—— OLT 上 DBA profile 配置实操

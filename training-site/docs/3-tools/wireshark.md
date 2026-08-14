@@ -2,7 +2,7 @@
 
 ## 抓包环境搭建（三种方式）
 
-按《抓包工具wireshark常用方法介绍》（测试部 易秋兰）：
+按《抓包工具wireshark常用方法介绍》（测试部）：
 
 1. **镜像交换机**（推荐）：抓包专用交换机做端口镜像。不要用 hub——速率只能到 10M。
 2. **串口 tcpdump**：设备上执行 `tcpdump -s0 -w /data/xx.cap`，不方便实时查看但最贴近设备侧。
@@ -23,7 +23,7 @@
 
 ## xcap 构造与发送报文
 
-知识库《wireshark和xcap使用分享》（周鹏）给出完整工作流：用 Wireshark 协助构造需要的报文 → 用 xcap 从指定网卡发送出去。适用场景：需要发送特定报文给网关而没有现成设备能发（实例：测试 dhcpd option 60 校验功能）。xcap 依赖 winpcap，报版本错误时装高版本 winpcap（《xcap发包工具使用方法》- 罗琪）。
+知识库《wireshark和xcap使用分享》给出完整工作流：用 Wireshark 协助构造需要的报文 → 用 xcap 从指定网卡发送出去。适用场景：需要发送特定报文给网关而没有现成设备能发（实例：测试 dhcpd option 60 校验功能）。xcap 依赖 winpcap，报版本错误时装高版本 winpcap（《xcap发包工具使用方法》）。
 
 ## 分析产出要求
 
@@ -39,16 +39,16 @@
 
 ## 扩展阅读（ima 测试知识库）
 
-- 《Wireshark 抓包.pdf》- 王琰琳 —— 部门标准教程
-- 《抓包工具wireshark常用方法介绍.ppt》- 易秋兰；《wireshark介绍.ppt》- 罗君
-- 《wireshark和xcap使用分享》- 周鹏；《xcap发包工具使用方法》- 罗琪
+- 《Wireshark 抓包.pdf》 —— 部门标准教程
+- 《抓包工具wireshark常用方法介绍.ppt》；《wireshark介绍.ppt》
+- 《wireshark和xcap使用分享》；《xcap发包工具使用方法》
 - 《Win7 设置PC抓取带vlan数据包设置》—— VLAN 环境抓包配置
 
 ### 本地经验文档（D:\WorkbuddySpace\Testwiki\经验文档）
 
-- 《wireshark和xcap使用分享》- 周鹏 —— 构造 dhcpd option 60 报文并发送（006/根目录）
-- 《WiFi6抓包指导》- 黄强 —— Linux+Intel 网卡替代 Omnipeek 抓 WiFi6 数据帧（006/路由器/2）
-- 《Omnipeek无线抓包以及802.11报文解析》- 黄波 —— 无线抓包与 802.11 帧解析（07 工具）
+- 《wireshark和xcap使用分享》—— 构造 dhcpd option 60 报文并发送（006/根目录）
+- 《WiFi6抓包指导》—— Linux+Intel 网卡替代 Omnipeek 抓 WiFi6 数据帧（006/路由器/2）
+- 《Omnipeek无线抓包以及802.11报文解析》—— 无线抓包与 802.11 帧解析（07 工具）
 - 《网络性能测试工具Iperf介绍》—— TCP 吞吐/UDP 丢包时延测试（07 工具）
-- 《web安全扫描&nessus漏洞扫描》《Web漏洞扫描工具AWVS安装及使用方法》- 刘明 —— 漏洞扫描工具（07 工具、006/网关/56）
-- 《使用Burp Suite暴力破解密码》- 徐惠恩 +《Brup suit 工具Web拦截测试指导》—— Web 拦截与爆破测试（006/网关/36、路由器/18）
+- 《web安全扫描&nessus漏洞扫描》《Web漏洞扫描工具AWVS安装及使用方法》—— 漏洞扫描工具（07 工具、006/网关/56）
+- 《使用Burp Suite暴力破解密码》 +《Brup suit 工具Web拦截测试指导》—— Web 拦截与爆破测试（006/网关/36、路由器/18）

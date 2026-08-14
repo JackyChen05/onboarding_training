@@ -36,6 +36,6 @@ OMCI（ONU Management and Control Interface，G.988）是 OLT 管理 ONU 的专�
 
 ## 扩展阅读（ima 测试知识库）
 
-- 《扩展OMCI说明》- 周鹏 —— 总结资料2，扩展 ME 详解
-- 《海外OMCI+TR069管理（以Huawei OLT为例)》- 骆聪 —— 纯 OMCI 管理下的认证/告警/WAN 配置适配
-- 《PON上线配置及TestCenter测试组播方法介绍》- 杜琴 —— 华为/中兴 OLT 注册上线配置
+- 《扩展OMCI说明》—— 总结资料2，扩展 ME 详解
+- 《海外OMCI+TR069管理（以Huawei OLT为例)》—— 纯 OMCI 管理下的认证/告警/WAN 配置适配
+- 《PON上线配置及TestCenter测试组播方法介绍》—— 华为/中兴 OLT 注册上线配置
