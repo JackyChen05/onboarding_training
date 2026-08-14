@@ -24,6 +24,21 @@
 
 连续多天定时记录 `uptime` + 内存占用 + 连接终端数，画折线看单调趋势——**判据是趋势斜率，不是绝对阈值**（手册 2.5 要点 4）。
 
+## Windows 侧 CMD 基本诊断
+
+测试 PC 侧（非设备 shell）常用 CMD 命令做链路诊断：
+
+| 命令 | 用途 |
+| --- | --- |
+| `ping <IP> -t` / `-l <大小>` | 连通性与长ping；大包测分片/MTU |
+| `arp -a` | 查看 ARP 缓存表（IP↔MAC 映射） |
+| `ipconfig /all` `/flushdns` | 网卡配置全览；清 DNS 缓存（排查解析异常） |
+| `tracert <IP>` | 路由跳数追踪，定位断点在哪一跳 |
+| `netstat -ano` | PC 本机端口与连接占用 |
+| `nslookup <域名>` | DNS 解析验证 |
+
+这些是「环境问题还是设备问题」分层定位的第一刀——先用 PC 侧命令确认链路通不通、解析对不对，再上设备 shell。
+
 ## 验收 checklist（导师签核项）
 
 - [ ] 不看文档完成：登 shell → 查 uptime/内存/进程 → 抓包 1 分钟 → 导出日志
@@ -44,3 +59,4 @@
 - 《DBUS接口命令集》—— 电信 DBUS 接口命令（006/网关/43）
 - 《OSGITest工具命令集》—— OSGI 插件测试命令（006/网关/51）
 - 《Ubuntu下使用Kea搭建DHCP服务器》《Ubuntu下搭建Speedtest测速服务器》—— Linux 服务器搭建（006/网关/57、58）
+- 《CMD基本诊断指令》—— Windows 侧 ping/arp/ipconfig/tracert 诊断（07 常用测试工具）

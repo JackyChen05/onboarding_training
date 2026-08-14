@@ -8,6 +8,20 @@
 2. **串口 tcpdump**：设备上执行 `tcpdump -s0 -w /data/xx.cap`，不方便实时查看但最贴近设备侧。
 3. **串口开启镜像抓包**：路由器/网关类产品支持的镜像功能。
 
+### 抓取带 VLAN 标签的报文
+
+默认情况下 Windows 网卡驱动会把 VLAN 标签剥掉，Wireshark 抓到的包看不到 802.1Q tag——排查 VLAN 透传/绑定问题时就抓瞎。解法（Realtek 网卡，Intel 类似）：
+
+1. 更新网卡驱动，确认网卡名称（本地连接属性 → 配置 → 详细信息）。
+2. 注册表定位 `HKLM\SYSTEM\ControlSet001\Control\Class\{4D36E972-...}\00nn`（对应网卡）。
+3. 添加/修改四项：`MonitorModeEnabled=1`、`MonitorMode=1`、`*PriorityVLANTag=0`、`SkDisableVlanStrip=1`。
+4. 重启后 Wireshark 即可抓到带 VLAN 标签的报文。
+
+### 无线空口抓包
+
+- **WiFi5/WiFi6 管理帧**用常规无线抓包即可；**WiFi6 数据帧**（1024QAM）需网卡与驱动支持——低成本方案是 Intel 网卡 + Linux monitor 模式（见《WiFi6抓包指导》），或用 BCM 路由器特殊版本开 rpcapd 远程抓包（《BCM路由器抓WiFi5&WiFi6无线包指导》）。
+- **Omnipeek** 方案与 802.11 帧字段解析见《Omnipeek无线抓包以及802.11报文解析》——无线抓包环境搭建 + 管理帧/控制帧/数据帧结构详解。
+
 无线空口抓包另见 [1.6 Wi-Fi 抓包](/1-access/wifi#无线抓包)。
 
 ## 常用过滤
