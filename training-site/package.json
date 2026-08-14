@@ -1,0 +1,13 @@
+{
+  "name": "test-training-site",
+  "version": "1.0.0",
+  "description": "应届生软件测试入职培训学习站",
+  "scripts": {
+    "dev": "vitepress dev docs",
+    "build": "vitepress build docs",
+    "preview": "vitepress preview docs"
+  },
+  "devDependencies": {
+    "vitepress": "^1.6.3"
+  }
+}

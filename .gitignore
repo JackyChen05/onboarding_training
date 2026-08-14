@@ -1,0 +1,21 @@
+# Dependencies
+node_modules/
+
+# VitePress build output & cache
+training-site/docs/.vitepress/dist/
+training-site/docs/.vitepress/cache/
+training-site/docs/.vitepress/.temp/
+
+# OS / editor
+Thumbs.db
+.DS_Store
+*.log
+
+# Office temp files
+~$*.docx
+
+# WorkBuddy internal data
+.workbuddy/
+
+# Internal source docs (excluded)
+*.docx
