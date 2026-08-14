@@ -19,3 +19,7 @@ Thumbs.db
 
 # Internal source docs (excluded)
 *.docx
+
+# Local experience docs (contain credentials/firmware, never commit)
+经验文档/
+source-md/exp-previews.txt

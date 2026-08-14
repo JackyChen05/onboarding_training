@@ -43,3 +43,12 @@
 - 《抓包工具wireshark常用方法介绍.ppt》- 易秋兰；《wireshark介绍.ppt》- 罗君
 - 《wireshark和xcap使用分享》- 周鹏；《xcap发包工具使用方法》- 罗琪
 - 《Win7 设置PC抓取带vlan数据包设置》—— VLAN 环境抓包配置
+
+### 本地经验文档（D:\WorkbuddySpace\Testwiki\经验文档）
+
+- 《wireshark和xcap使用分享》- 周鹏 —— 构造 dhcpd option 60 报文并发送（006/根目录）
+- 《WiFi6抓包指导》- 黄强 —— Linux+Intel 网卡替代 Omnipeek 抓 WiFi6 数据帧（006/路由器/2）
+- 《Omnipeek无线抓包以及802.11报文解析》- 黄波 —— 无线抓包与 802.11 帧解析（07 工具）
+- 《网络性能测试工具Iperf介绍》—— TCP 吞吐/UDP 丢包时延测试（07 工具）
+- 《web安全扫描&nessus漏洞扫描》《Web漏洞扫描工具AWVS安装及使用方法》- 刘明 —— 漏洞扫描工具（07 工具、006/网关/56）
+- 《使用Burp Suite暴力破解密码》- 徐惠恩 +《Brup suit 工具Web拦截测试指导》—— Web 拦截与爆破测试（006/网关/36、路由器/18）

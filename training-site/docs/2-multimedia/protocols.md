@@ -42,3 +42,10 @@ RTSP（Real Time Streaming Protocol）负责流媒体会话的建立与控制（
 - 《IGMP协议介绍》—— 各版本比较 + Snooping 原理
 - 《山东现场组播返工升级指导书》—— 组播升级工具实战（注意跨地区返工的地区码问题）
 - 《STC-TCC-340-0505-02-CN-组播测试例详解》—— Spirent TestCenter 组播测试
+
+### 本地经验文档（D:\WorkbuddySpace\Testwiki\经验文档）
+
+- 《IGMP基本协议&测试方法介绍》—— Membership Report/Leave Group 交互与组播问题定位（006/路由器/5）
+- 《使用VLC搭建点播服务器指导书》- 周鹏 —— 用 VLC 快速搭 RTSP 点播源（006/2024/网关/18）
+- 《iptv播放测试问题经验分享》—— 直播/点播/回看常见播放问题（01IPTV/）
+- 《有线网口测试问题分享》—— 网口协商与 IPTV 承载问题（01IPTV/）
