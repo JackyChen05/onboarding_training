@@ -7,6 +7,9 @@ export default defineConfig({
   lang: 'zh-CN',
   cleanUrls: true,
   lastUpdated: true,
+  head: [
+    ['script', {}, "var _hmt = _hmt || [];\n(function() {\n  var hm = document.createElement(\"script\");\n  hm.src = \"https://hm.baidu.com/hm.js?a11edaa1240351f4d7d18cc1f53b5b1c\";\n  var s = document.getElementsByTagName(\"script\")[0];\n  s.parentNode.insertBefore(hm, s);\n})();"]
+  ],
   themeConfig: {
     nav: [
       { text: '首页', link: '/' },
