@@ -1,12 +1,12 @@
 # 3.7 平台调试命令速查
 
-本页全量收录《应届生试用期能力建设与签核手册》Sheet3 的调试命令，按平台/方案分组。标注说明：
+本页全量收录《应届生试用期能力建设与签核手册》Sheet3、《中兴微平台调试Debug指令大全》《国内路由器平台WiFi性能测试常用命令集》的调试命令，按平台/方案分组。标注说明：
 
 - ⭐ **常用**：日常测试高频使用，要求熟练掌握
 - 🔧 **进阶**：问题定位/深度调试用，需要时查阅
 
 ::: warning 敏感信息说明
-各平台的默认账号密码、隐藏页面 URL、内网服务器地址已按站点规范剔除。需要时向导师索取，并遵守保密要求（不能对外公开）。
+中兴微/ECONET 各平台的默认账号密码属公开信息（2.14 节列出）；但**隐藏页面 URL（含一次性时戳 Telnet 开关）、内网服务器地址**仍按规范剔除，需要时向导师索取并遵守保密要求。
 :::
 
 ## 一、ADB 调试（中屏音箱/安卓设备）
@@ -45,20 +45,257 @@
 
 ## 二、中兴微方案接入网产品 ⭐
 
+中兴微（ZTE Micro / Sanechips）平台用 **sendcmd / sidbg** 两大命令族操作底层数据库，**sismac / sk_test** 负责写号。不同芯片版本（ZX279127/128/131/133 等）命令略有差异，先用 `cat /proc/zxic/softVersion` 确认版本。
+
+### 2.1 系统信息查看 ⭐
+
 | 命令 | 功能 |
 | --- | --- |
 | `cat /proc/version` | 查看软件版本时间 |
+| `cat /proc/zxic/softVersion` | 查看软件版本号 |
+| `cat /proc/zxic/hardVersion` | 查看硬件版本号 |
 | `cat /proc/zxic/bootVersion` | 查看 boot 软件时间 |
 | `cat /proc/zxic/versionstates` | 查看软件分区情况 |
 | `siupgrade switchver 0/1` | 版本分区切换（重启生效） |
-| `ifconfig mirror add pon0 eth0` | 设置 PON 口镜像（eth0=LAN1，eth1=LAN2，eth2=LAN3，eth3=LAN4） |
-| `ifconfig mirror del pon0 eth0` | 删除 PON 口镜像 |
-| `ifconfig mirror show` | 查看 PON 口镜像 |
-| `sidbg log -l <级别>` | 管理模块打印级别：None(0)~Debug(8) |
-| `sidbg 1 DB p DevAuthInfo` | 查看 web 页面账号信息 |
-| `sidbg 1 DB p DevInfo` | 查看设备基本信息 |
 | `cat /proc/cpuusage` | 查看 CPU 使用率 |
 | `cat /proc/meminfo` | 查看 RAM 使用情况（需自行计算） |
+| `cat /userconfig/flag_type` | 查看地区码 |
+| `cat /proc/pon/upmode` | 查看 PON 上行模式 |
+| `ifconfig` | 查看所有网络接口状态 |
+| `iwconfig apcli0` / `iwconfig apcli1` | 查看 Mesh Agent 连接状态（2.4G/5G 回传） |
+| `cat /var/iproute2/wan_mark_map.conf` | 查看 WAN 连接的 mark 值映射 |
+| `opticalst -getpara` | 获取发送/接收光功率 |
+| `echo 0 128 > /sys/devices/platform/ponmac/gmac/bwMap` + `cat .../allocTab` | 获取 OLT 下发参数 🔧 |
+| `ifconfig mirror add pon0 eth0` | 设置 PON 口镜像（eth0=LAN1，eth1=LAN2，eth2=LAN3，eth3=LAN4） |
+| `ifconfig mirror del pon0 eth0` / `ifconfig mirror show` | 删除 / 查看 PON 口镜像 |
+| `sidbg log -l <级别>` | 管理模块打印级别：None(0)~Debug(8) |
+
+### 2.2 sendcmd 命令族（数据库操作）⭐
+
+| 命令 | 功能 |
+| --- | --- |
+| `sendcmd 1 DB p DevAuthInfo` | 查看设备认证信息（账号密码） |
+| `sendcmd 1 DB printall 1` | 打印数据库全部内容 |
+| `sendcmd 1 DB save` / `sendcmd 1 DB reset` | 保存修改 / 恢复出厂 |
+| `sendcmd 1 DB p WLANAD` | 查看下挂设备信息 |
+| `sendcmd 1 DB p WLANBase` / `WLANCfg` / `WLANGUEST` | WiFi 网卡 / SSID / 访客网络配置 |
+| `sendcmd 1 DB p WLANPSK` / `WLANWEP` / `WLANWAPI` | PSK / WEP / WAPI 密钥配置 |
+| `sendcmd 1 DB p WLANWMM` / `WLANWPS` | WMM / WPS 配置 |
+| `sendcmd 1 DB p ForwardRule` / `MirrorRule` / `DetailProcess` | 数据流重定向 / 镜像 / 精细流处理规则 🔧 |
+| `sendcmd 1 DB p CMCCApiRight` | 查看网关插件权限 |
+| `sendcmd 1 DB p PPPTimePlc` | 查看 PPPoE 重拨时间策略 |
+| `sendcmd 1 DB set <表名> <行号> <字段> <值>` | 修改数据库字段值 |
+| `sendcmd 1 DB set TelnetCfg 0 Lan_Enable 1` / `TS_Enable 1` | 开启 Telnet（LAN 侧 / TS 侧） |
+| `sendcmd 1 DB set PDTCTUSERINFO 0 Status 0` + `Result 1` | 关闭 DNS 欺骗 🔧 |
+| `sendcmd 1 DB set PPPTimePlc 0 IntervalCnt <值>` / `TimePlc "间隔"` | 设置 PPPoE 重拨次数 / 时间间隔 🔧 |
+| `sendcmd 1 DB set CMCCOSGIInfo 0 AccDefault 1` / `CMCCBundleInfo 0 InstallFirst 0` | OSGI 插件默认权限 / 安装首选项 🔧 |
+| `sendcmd 1 DB set NetWorkingPlugin 0 DBGFlag 1` | 开启平台交互报文日志 |
+| `sendcmd 1 DB set EasyMeshConfig 0 MapEnable 0` | 关闭 Mesh |
+
+### 2.3 sendcmd 二级进程调试日志 🔧
+
+格式：`sendcmd <进程号> <模块> -1 <级别>`（8=Debug 开，0/5=关）。
+
+| 命令 | 功能 |
+| --- | --- |
+| `sendcmd 1 wlan_config -1 8` / `wlan_mgr -1 8` / `wlan adapter -1 8` | wlan 配置/管理/adapter 调试日志 |
+| `sendcmd 1 upgrade_mgr -1 8` / `fm_mgr -1 8` | 升级管理 / 文件管理模块日志 |
+| `sendcmd 3 webd -1 8` / `-1 0` | 开 / 关 Web 调试日志 |
+| `sendcmd 3 tr069 -1 8` / `-1 5` | 开 / 关 RMS(TR069) 日志 |
+| `sendcmd 3 tr069 showsoap 1` / `0` | 开 / 关 SOAP 报文打印 |
+| `sendcmd 3 webd printenv` | 查看 Web 环境变量 |
+| `sendcmd 73 -1 8` / `73 plugm_cmdtype dbgall 1` / `dbgjson 1` | 插件日志 / 全部调试 / JSON 调试 |
+| `sendcmd 73 rm_mgr quickboot 1` | 快速发起连接（代替插拔光纤调试） |
+| `sendcmd 74 osgid logctr 1` / `0` / `shutdown` / `install name=.. url=.. fsize=..` | Java 日志开关 / 关 OSGI 框架 / 安装 OSGI 插件 |
+| `sendcmd 2 -1 8` / `2 BoardControl set 34008 0 10` / `0 20` | 语音调试日志 / 开 / 关语音口测试（产测） |
+
+### 2.4 sidbg 命令族 ⭐
+
+| 命令 | 功能 |
+| --- | --- |
+| `sidbg 1 DB printall 1` | 打印数据库全部内容 |
+| `sidbg 1 DB p DevAuthInfo` | 查看设备认证信息（账号密码） |
+| `sidbg 1 DB p DevInfo` | 查看设备基本信息 |
+| `sidbg 1 DB set TelnetCfg 0 Lan_Enable 1` / `TS_Enable 1` | 开启 Telnet（需重启生效） |
+| `sidbg 1 DB save` / `sidbg 1 DB reset` | 保存 / 恢复出厂 |
+| `sidbg 1 DB set VoIPLineCfg 0 BufferUnderflows 0` 等 | 语音 Buffer/Overruns/Underruns 参数 🔧 |
+| `sidbg 1 DB set NetWorkingPlugin 0 DBGFlag 1` | 开启平台交互日志 |
+
+### 2.5 OMCI 与 GPON 调试 🔧
+
+| 命令 | 功能 |
+| --- | --- |
+| `sendcmd 132 omcidebug setprintlevel 5 0 0` | 开 OMCI 5 级日志（详细调试） |
+| `sendcmd 132 omcidebug setprintlevel 3 0 0` | 开 OMCI 3 级日志（升级时用） |
+| `sendcmd 132 omcidebug setprintlevel 0 0 0` | 关 OMCI 日志 |
+| `gponsdk_test -s_print_dbg 2` / `0` | 开 / 关 GPON SDK PLoAM 消息打印（断电不保存） |
+| `gpontest -gpondncounters` | 下行接收错误统计，判断链路质量 |
+
+### 2.6 写号/生产指令（sismac / sk_test）⭐
+
+| 命令 | 功能 |
+| --- | --- |
+| `sismac show` | 查看所有参数 |
+| `sismac 1 2176 SKYW` | 写入设备 OUI（厂商 ID） |
+| `sismac 1 2177 <8位>` / `sismac 1 768 <6位>` / `sismac 1 256 <MAC>` | 写入 MAC 后 8 位 / 前 6 位 / 完整 MAC |
+| `sismac 1 512 <标识>` | 写入设备标识 |
+| `sismac 1 1024 <SSID>` / `sismac 1 1312 <密码>` | 写入 2.4G SSID / 密码 |
+| `sismac 1 1028 <SSID-5G>` / `sismac 1 1316 <密码>` | 写入 5G SSID / 密码 |
+| `sismac 1 1793 <密码>` | 写入 Web 登录密码 |
+| `sismac 2 512` | 查看 SN 值（转 ascii 即 root 密码） 🔧 |
+| `sk_test set_ethernet_mac <MAC>` | 写入 br0 MAC |
+| `sk_test set_sn <sn>` / `set_cmei <cmei>` | 写入 SN / CMEI |
+| `sk_test set_2g_ssid <ssid>` / `set_2g_password <pwd>` | 2.4G SSID / 密钥 |
+| `sk_test set_5g_ssid <ssid>` / `set_5g_password <pwd>` | 5G SSID / 密钥 |
+| `sk_test set_web_user_name <name>` / `set_web_user_password <pwd>` | Web 普通用户账号 / 密码 |
+| `sk_test set_region_id 299` | 设置地区码（299=全国） |
+| `sk_test set_xponsn <12位SN>` | 写入 GPON SN |
+| `sk_test set_device_model <型号>` / `set_hardware_version <ver>` | 改设备型号 / 硬件版本（重启生效） |
+| `sk_test save_wifi_calibration_2g` / `_5g` | 保存 2G/5G WiFi 校准数据 |
+| `siupgrade sdefconf 199` | 设置地区码（199=全国） |
+| `nand scrub.chip` | 手动清除 FLASH（切换运营商时，**慎用**） 🔧 |
+
+> 写完号必须恢复出厂（`sidbg 1 DB reset` 或页面操作）才生效。
+
+### 2.7 WiFi 调试（MTK，中兴微路由平台）🔧
+
+| 命令 | 功能 |
+| --- | --- |
+| `iwpriv wlan0 e2p` / `iwpriv wlan4 e2p` | 读 2.4G / 5G 校准值 |
+| `cd /wlan` + `tftp -pl MT7603E.bin <IP>` / `MT7613E_EEPROM.bin` | 备份 2.4G / 5G 校准文件 |
+| `tftp -gr MT7915_EEPROM.bin <IP>` | 写入校准文件 |
+| `iwpriv wlan0 e2p 191=4852; e2p 193=0148; set bufferWriteBack=4` | 切 2 天线 |
+| `iwpriv wlan0 e2p 191=485B; e2p 193=014C; set bufferWriteBack=4` | 切 3 天线 |
+| `iwpriv wlan0/wlan4 show stainfo` | 查看无线终端列表 |
+| `iwpriv wlan0/wlan4 set Debug=3` | 无线 debug；循环抓日志 `while true;do iwpriv wlan0 show stainfo;sleep 1;iwpriv wlan4 stat;done` |
+| `iwpriv wlan4 show radio_stat` / `sta_stat` / `mbss_stat` / `stat` / `mbss=1` / `set ResetCounter` | wifi 接口信息 / 计数清零 |
+| `iwpriv wlan4 show manual_txop` / `txopinfo` / `tmacinfo` / `agginfo` | txop 相关 |
+| `iwpriv ra1 set TxBurst=0; iwpriv ra1 mac 820F4014=ffff0000` | 调 TXOP 提高发包时间 |
+| `iwpriv wlan4 show mibinfo=1` | 收发包数统计 |
+| `iwpriv wlan4 show driverinfo` | 无线驱动版本 |
+| `iwpriv wlan0/wlan4 set SiteSurvey=1` + `set PartialScan=1` + `get_site_survey` | 无线扫描及查看 |
+| `nvram show wapi` | 查看黑白名单 |
+| `nvram set wapi MacFilterEnable 1` + `MacFilterPolicy 0/1` + `set MacFilterEntries` | 黑白名单（0=黑名单 / 1=白名单） |
+| `echo watchdog=disable > /proc/watchdog/ctrl` | 关闭看门狗（长稳测试防自动重启） |
+
+### 2.8 Mesh 调试（mapd_cfg / mapd_cli）🔧
+
+| 命令 | 功能 |
+| --- | --- |
+| `sendcmd 1 DB set EasyMeshConfig 0 MapEnable 0` + `sendcmd 1 DB save` | 关闭 Mesh |
+| `iwconfig apcli0` / `apcli1` | 查看 Agent 连接状态 |
+| `mapd_cfg` | 查看/修改漫游策略（`CentralizedSteering=1` 默认集中式，controller 决定漫游） |
+| `cat /wlan/mapd_cfg` | 查看当前漫游策略（含 bss_config_priority/DualBH/BHSteerTimeout 等） |
+| `mapd_cli /tmp/mapd_ctrl get steeringparams` | 漫游参数全表（CU 阈值、RSSI 边缘、MCS/RSSI Crossing、BTM/Force 超时与禁时等） |
+| `mapd_cli /tmp/mapd_ctrl get steeringparams \| LowRSSIAPSteerEdge_root` / `_RE` | Apsteering 阈值 |
+| `mapd_cli /tmp/mapd_ctrl set log_level 2` 后看 log `[mapd][wlanif_deauth_sta]` | 判断是否走进 force steering（强制漫游） |
+| `mapd_cli /tmp/mapd_ctrl get RSSIThreshold` / `RSSIThreshold5G` | Bandsteering 阈值（2.4G→5G / 5G→2.4G） |
+| `mapd_cli /tmp/mapd_ctrl set RSSIThreshold -50` / `set RSSIThreshold5G -60` | 修改 Bandsteering 阈值 |
+| `mapd_cli /tmp/mapd_ctrl set log_level 2`（开）/ `6`（关） | mapd 日志（值越小 log 越多） |
+| `1905ctrl agent log_level 3`（开）/ `1`（关） | 1905 daemon 日志（值越大 log 越多） |
+
+### 2.9 加速开关与 WAN 镜像 ⭐
+
+性能测试前必做——关加速排除硬件转发干扰：
+
+| 命令 | 功能 |
+| --- | --- |
+| `echo 0 > /proc/ffe/hff_enable` | 关闭硬加速 |
+| `echo 0 > /proc/ffe/ffe_enable` | 关闭软加速 |
+| `ifconfig mirror add nbif0 eth0` | 设置 WAN 口镜像 |
+
+### 2.10 网络与防火墙调试 🔧
+
+| 命令 | 功能 |
+| --- | --- |
+| `iptables -nL` / `-t nat` / `-t mangle` | 三层防火墙 / NAT / Mangle 规则 |
+| `ebtables -L` | 二层防火墙规则 |
+| `cat /proc/net/mirror_rule` / `detail_process_rule` | 镜像 / 精细流处理内核规则 |
+| `cat /proc/net/dev` | 网络设备统计 |
+| `cat /proc/filesystems \| grep cifs` | 是否支持 CIFS |
+
+### 2.11 DBUS / ubus 接口速览 🔧
+
+运营商平台对接（电信 com.ctc.igd1、联通 com.cuc.igd1）走 DBUS。掌握通用格式即可，具体路径随项目查接口文档：
+
+```bash
+# 监控 DBUS 信号
+dbus-monitor --system --monitor "type='signal'"
+# 查看接口方法（Introspect）
+dbus-send --system --print-reply --dest=com.ctc.igd1 <路径> org.freedesktop.DBus.Introspectable.Introspect
+# 读属性 Get / GetAll
+dbus-send --system --type=method_call --print-reply --dest=com.ctc.igd1 <路径> com.ctc.igd1.Properties.Get string:'<接口>' string:'<属性>'
+# 写属性 Set
+dbus-send --system --type=method_call --print-reply --dest=com.ctc.igd1 <路径> com.ctc.igd1.Properties.Set string:'<接口>' string:'<属性>' variant:<类型>:'<值>'
+```
+
+常用路径：`/com/ctc/igd1/Info/{Device,Network,PON,WiFi,VoIP}`（信息查询）、`/com/ctc/igd1/Diagnostics/{Ping,TraceRoute,HttpDownload}`（诊断测试，调 `StartTest`）。联通侧把 `com.ctc` 换成 `com.cuc`，另可用 `gdbus call -y -d com.cuc.igd1 -o <路径> -m <方法>`。
+
+ubus（电信 elink 场景）：`ubus monitor` 开日志；`ubus call ctcapd serverinfo set '{...}'` 设注册测试平台地址；`ubus call ctcapd.appd stop/run '{"appname":"elinkclt"}'` 启停 elink 插件。
+
+### 2.12 联通中间件与 App 管理速览 🔧
+
+```bash
+lxc-attach -n ufw -P /opt/cu/framework   # 进入中间件
+ufwmg -v                                  # 中间件版本
+cu_pkg.sh List / Install <pkg.ipk> / Uninstall / Stop / Run / stat   # 插件管理
+```
+
+App 管理经 `com.cuc.appframework1` DBUS 接口（List/Install/Uninstall/Upgrade/Run/Stop/GetStatus）。
+
+### 2.13 文件传输（tftp）⭐
+
+| 命令 | 功能 |
+| --- | --- |
+| `tftp -pl <文件> <IP>` | 设备上传文件到 PC（put） |
+| `tftp -gr <文件> <IP>` | 从 PC 下载文件到设备（get） |
+| `mount -t cifs //IP/share /mnt -o username=..,password=..` | 挂载 CIFS/SMB 共享 |
+
+### 2.14 运营商默认账号（公开信息）
+
+| 设备 | 运营商 | 串口 | telnet |
+| --- | --- | --- | --- |
+| 路由器-中兴微 | 移动 | `root/aDm8H%MdA` | `CMCCAdmin / wifi密码+web登录密码` |
+| 路由器-中兴微 | 电信 | `root/aDm8H%MdA` | `telecomadmin / wifi密码+web登录密码` |
+| 路由器-中兴微 | 联通 | `root/aDm8H%MdA` | `user / web登录密码` |
+| 网关-中兴微 | 电信 | `root/Zxic521` | 一级 `telnetadmin/nE7jA%5m`，二级 `su/网关SN` |
+| 网关-中兴微 | 移动 | `root/aDm8H%MdA` | 一级 `root/wifi密码+管理员密码`，二级 `su/aDm8H%MdA` |
+| 网关-中兴微 | 联通 | `root/Zxic521` | 一级 `user/Pon521`，二级 `su/Pon521` |
+
+> Telnet 开启方式（隐藏页面 + 一次性时戳）属敏感操作，向导师索取，不进本站。
+
+### 2.15 常用调试组合 ⭐
+
+```bash
+# ① 快速查看账号密码（串口登录后）
+sidbg 1 DB printall 1            # 或 sendcmd 1 DB p DevAuthInfo
+
+# ② 开启 Telnet（重启生效）
+sidbg 1 DB set TelnetCfg 0 Lan_Enable 1
+sidbg 1 DB set TelnetCfg 0 TS_Enable 1
+sidbg 1 DB save && reboot
+
+# ③ 写号后恢复出厂（写完号必须恢复出厂才生效）
+sk_test set_ethernet_mac <MAC>; sk_test set_sn <sn>
+sk_test set_2g_ssid <ssid>; sk_test set_2g_password <pwd>
+sk_test set_5g_ssid <ssid>; sk_test set_5g_password <pwd>
+sk_test set_web_user_name <name>; sk_test set_web_user_password <pwd>
+sk_test set_region_id 299
+sidbg 1 DB reset
+
+# ④ 查看软件版本/分区
+cat /proc/zxic/softVersion; cat /proc/zxic/hardVersion; cat /proc/zxic/versionstates
+
+# ⑤ 开 OMCI 调试日志（注册问题定位，插光纤前执行）
+gponsdk_test -s_print_dbg 2
+sendcmd 132 omcidebug setprintlevel 5 0 0
+# ... 插光纤抓日志后关闭 ...
+gponsdk_test -s_print_dbg 0
+sendcmd 132 omcidebug setprintlevel 0 0 0
+
+# ⑥ 关加速（性能测试前）
+echo 0 > /proc/ffe/hff_enable; echo 0 > /proc/ffe/ffe_enable
+```
 
 ## 三、BCM 无线驱动调试
 
@@ -333,4 +570,6 @@ IPv6 测试 DNS：百度 `2400:da00::6666`、谷歌 `2001:4860:4860::8888`。
 
 ## 原文出处
 
-- 《应届生试用期能力建设与签核手册.xlsx》Sheet3 —— 经验文档/07 常用测试工具（账号密码、隐藏页面、内网地址已剔除，向导师索取）
+- 《应届生试用期能力建设与签核手册.xlsx》Sheet3 —— 经验文档/07 常用测试工具（隐藏页面、内网地址已剔除，向导师索取）
+- 《中兴微平台调试Debug指令大全.md》—— 经验文档/07 常用测试工具（第二节 2.1~2.15 主要来源）
+- 《国内路由器平台WiFi性能测试常用命令集》—— 经验文档/06 性能测试相关总结（写号/WiFi/Mesh/中兴微128R/运营商默认账号）
