@@ -56,7 +56,9 @@ export default defineConfig({
             { text: '3.2 串口与系统日志抓取', link: '/3-tools/serial' },
             { text: '3.3 码流 / 媒体分析', link: '/3-tools/stream' },
             { text: '3.4 Linux 常用命令', link: '/3-tools/linux' },
-            { text: '3.5 版本与缺陷管理工具', link: '/3-tools/defect-tools' }
+            { text: '3.5 版本与缺陷管理工具', link: '/3-tools/defect-tools' },
+            { text: '3.6 导师签核清单', link: '/3-tools/signoff' },
+            { text: '3.7 平台调试命令速查', link: '/3-tools/commands' }
           ]
         }
       ],
