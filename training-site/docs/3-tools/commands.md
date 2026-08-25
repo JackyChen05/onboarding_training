@@ -1,6 +1,6 @@
 # 3.7 平台调试命令速查
 
-本页全量收录《应届生试用期能力建设与签核手册》Sheet3、《中兴微平台调试Debug指令大全》《国内路由器平台WiFi性能测试常用命令集》的调试命令，按平台/方案分组。标注说明：
+本页全量收录《应届生试用期能力建设与签核手册》Sheet3、《中兴微平台调试Debug指令大全》《国内路由器平台WiFi性能测试常用命令集》《ADB调试指令大全》的调试命令，按平台/方案分组。标注说明：
 
 - ⭐ **常用**：日常测试高频使用，要求熟练掌握
 - 🔧 **进阶**：问题定位/深度调试用，需要时查阅
@@ -9,39 +9,205 @@
 中兴微/ECONET 各平台的默认账号密码属公开信息（2.14 节列出）；但**隐藏页面 URL（含一次性时戳 Telnet 开关）、内网服务器地址**仍按规范剔除，需要时向导师索取并遵守保密要求。
 :::
 
-## 一、ADB 调试（中屏音箱/安卓设备）
+## 一、ADB 调试（机顶盒/中屏音箱/安卓设备）
 
-### 设备管理 ⭐
+适用于机顶盒（IPTV/OTT）、中屏音箱及通用安卓终端。不同 Android 版本（4.4/9.0/11）命令略有差异，先 `adb shell getprop ro.build.version.release` 确认系统版本。
+
+### 1.1 基础连接与确认 ⭐
 
 | 命令 | 功能 |
 | --- | --- |
 | `adb devices` | 查看当前连接的设备列表，确认在线 |
-| `adb install <apk路径>` | 安装指定 APK，用于固件验证或应用部署 |
-| `adb uninstall <package>` | 卸载指定包名应用，用于测试清理或版本替换 |
-| `adb shell pm list packages` | 列出所有已安装应用包名，可配合 `\| grep xxx` 模糊查找 |
-| `adb shell pm list packages -3` | 仅列第三方应用（排除系统预置） |
-| `adb shell pm list packages -s` | 仅列系统应用 |
-| `adb shell am start -n <package>/<activity>` | 通过包名+Activity 直接启动应用特定页面（如设置页） |
-| `adb shell am force-stop <package>` | 强制停止应用进程，模拟应用被杀后的状态恢复 |
-| `adb shell input text "hello"` | 模拟键盘输入，用于自动化填充表单或搜索框 |
-| `adb shell input keyevent KEYCODE_BACK` | 模拟遥控器返回键，用于 UI 自动化导航 |
-| `adb shell screenrecord /sdcard/demo.mp4` | 录制屏幕操作视频，用于复现 Bug 或制作演示 |
-| `adb exec-out screencap -p > screen.png` | 截取当前屏幕保存本地，用于问题截图取证 |
-| `adb push <本地文件> <设备路径>` | 推送文件到设备（测试包、配置文件） |
-| `adb pull <设备文件> <本地路径>` | 从设备拉取文件（日志、截图） |
-| `adb shell monkey -p <package> -v 1000` | Monkey 随机压力测试（1000 次随机事件），验证稳定性 |
+| `adb connect <IP>` | 无线连接设备（同局域网） |
+| `adb disconnect <IP>` | 断开无线连接 |
+| `adb kill-server` / `adb start-server` | 终止 / 启动 ADB 服务进程 |
+| `adb reboot` | 重启设备 |
+| `adb root` | 以 root 权限重启 adbd 守护进程 |
+| `adb shell` | 进入设备 shell 终端 |
 
-### 日志与性能分析 ⭐
+### 1.2 权限与模式 🔧
 
 | 命令 | 功能 |
 | --- | --- |
-| `adb logcat -v time \| grep -i "error\|crash"` | 实时查看 error/crash 日志，快速定位崩溃 |
-| `adb logcat -v time -s TagName` | 按 Tag 过滤带时间戳日志，追踪特定模块 |
-| `adb shell dumpsys meminfo <package>` | 查看应用内存详情（Java Heap、Native Heap、Graphics） |
-| `adb shell dumpsys cpuinfo` | 查看 CPU 各核心及进程实时占用率 |
-| `adb shell top -n 1 \| grep <包名>` | 查看指定应用瞬时 CPU 占用 |
-| `adb shell cat /proc/meminfo` | 系统整体内存（MemTotal/MemFree/Cached/Swap） |
-| `adb shell cat /proc/cpuinfo` | CPU 架构、核心数、型号及硬件信息 |
+| `adb remount` | 重新挂载文件系统为可读写 |
+| `adb disable-verity` | 关闭 dm-verity 校验（改 system 分区前需执行） |
+| `adb shell setprop persist.sys.usb.config adb` | 设置 USB 为 ADB 调试模式（中屏音箱） |
+| `fw setenv otg device 1` | 设置 OTG 为 device 模式（中屏音箱） |
+
+### 1.3 不同产品 ADB 开启方法 ⭐
+
+**机顶盒（IPTV/OTT）**：遥控器连续按 **菜单键 10 次 + 右键 1 次** → 打开 ADB 开启界面 → 输入动态密码 → 即可网络或 USB 连接 adb。手动重启机顶盒即关闭 adb。
+
+**中屏音箱**：同时依次按 **语音禁唤醒键、音量-、音量+** 各 3 次 → 进入 ADB 控制界面（显示 MAC 和随机码）→ 用随机码在内部平台获取动态密码（平台地址向导师索取）。
+
+- **有线连接**：双头 USB 线连接，执行 `fw setenv otg device 1` + `setprop persist.sys.usb.config adb`，重启后 USB 可一直连 adb。
+- **无线连接**：同局域网下 `adb connect <IP>`。
+- **进入串口 shell**：`adb root` → `adb shell` → 输入密码（向导师索取）。
+
+**ADB 状态检测**（判断是否已开启）：
+
+| 命令 | 功能 |
+| --- | --- |
+| `getprop \| grep adb` | 查看 ADB 属性，`[init.svc.adbd]: [stopped]` 表示关闭 |
+| `busybox netstat -ntlp` | 查看端口，检查 adb 端口是否 LISTEN |
+| `adb connect <ip:port>` | 尝试连接，检测 adb 是否开启 |
+
+### 1.4 应用管理 ⭐
+
+**安装与卸载**
+
+| 命令 | 功能 |
+| --- | --- |
+| `adb install <apk路径>` | 安装 APK |
+| `adb install -r <apk路径>` | 覆盖安装（保留数据） |
+| `adb install -d <apk路径>` | 降级安装低版本 |
+| `adb uninstall <package>` | 卸载应用 |
+| `adb uninstall -k <package>` | 卸载但保留数据与缓存 |
+| `adb shell pm install/uninstall` | shell 内安装/卸载 |
+
+**包管理查询**
+
+| 命令 | 功能 |
+| --- | --- |
+| `adb shell pm list packages` | 列出所有已安装应用包名 |
+| `adb shell pm list packages -3` / `-s` | 仅第三方 / 仅系统应用 |
+| `adb shell pm list packages \| grep xxx` | 按关键字模糊搜索 |
+| `adb shell pm list packages -f` | 列出包名及 APK 路径 |
+| `adb shell pm path <package>` | 查看应用 APK 安装路径 |
+| `adb shell pm clear <package>` | 清除应用数据（相当于恢复出厂） |
+
+**Activity 管理**
+
+| 命令 | 功能 |
+| --- | --- |
+| `adb shell am start -n <package>/<activity>` | 直接启动应用特定页面 |
+| `adb shell am start -a android.intent.action.VIEW -d <URL>` | 通过 URL 启动页面 |
+| `adb shell am force-stop <package>` | 强制停止应用进程 |
+| `adb shell am kill <package>` | 杀死应用进程 |
+| `adb shell am broadcast -a <action>` | 发送广播 |
+| `adb shell am startservice -n <package>/<service>` | 启动指定服务 |
+| `adb shell dumpsys package <package>` | 查看应用详细 Activity 信息 |
+
+### 1.5 输入模拟 🔧
+
+| 命令 | 功能 |
+| --- | --- |
+| `adb shell input text "hello"` | 模拟键盘输入文字 |
+| `adb shell input keyevent KEYCODE_BACK` | 返回键 |
+| `adb shell input keyevent KEYCODE_HOME` / `KEYCODE_MENU` | Home / 菜单键 |
+| `KEYCODE_DPAD_UP/DOWN/LEFT/RIGHT/CENTER` | 方向键上/下/左/右/确认 |
+| `KEYCODE_VOLUME_UP/DOWN` | 音量加/减 |
+| `KEYCODE_POWER` / `KEYCODE_SLEEP` / `KEYCODE_WAKEUP` | 电源 / 休眠 / 唤醒 |
+| `KEYCODE_ENTER` / `KEYCODE_DEL` | 回车 / 退格 |
+| `adb shell input tap <x> <y>` | 模拟屏幕点击（坐标） |
+| `adb shell input swipe <x1> <y1> <x2> <y2>` | 模拟滑动 |
+
+### 1.6 屏幕截图与录屏 ⭐
+
+| 命令 | 功能 |
+| --- | --- |
+| `adb exec-out screencap -p > screen.png` | 截图保存到本地 |
+| `adb shell screencap -p /sdcard/screen.png` + `adb pull` | 截图存设备再拉到本地 |
+| `adb shell screenrecord /sdcard/demo.mp4` | 录制屏幕操作视频 |
+| `screenrecord --size 720x1280` / `--time-limit 30` / `--bit-rate 4000000` | 指定分辨率 / 时长(秒) / 比特率 |
+
+### 1.7 文件传输 ⭐
+
+| 命令 | 功能 |
+| --- | --- |
+| `adb push <本地文件> <设备路径>` | 推送文件到设备 |
+| `adb pull <设备文件> <本地路径>` | 从设备拉取文件 |
+| `adb sync <目录>` | 同步目录（仅复制更新的文件） |
+
+### 1.8 日志与调试 ⭐
+
+**logcat**
+
+| 命令 | 功能 |
+| --- | --- |
+| `adb logcat` / `-v time` | 实时日志 / 带时间戳 |
+| `adb logcat -v time \| grep -i "error\|crash"` | 过滤 error/crash 快速定位崩溃 |
+| `adb logcat -v time -s TagName` | 按 Tag 过滤 |
+| `adb logcat -c` | 清除日志缓冲区 |
+| `adb logcat -b main -b system -b crash` | 查看多个缓冲区 |
+| `adb logcat -d > log.txt` | 导出日志到文件 |
+| `adb logcat *:V` / `*:E` | 全部级别 / 仅 Error 级别 |
+
+**dmesg 内核日志**：`adb shell dmesg`、`| grep -i "error\|fail"` 过滤错误。
+
+**bugreport**：`adb bugreport`（完整报告含日志/dump/系统信息）、`adb bugreport bugreport.zip` 导出 zip。
+
+### 1.9 性能与系统信息 🔧
+
+| 命令 | 功能 |
+| --- | --- |
+| `adb shell dumpsys meminfo <package>` / `dumpsys meminfo` | 应用 / 系统内存详情 |
+| `adb shell cat /proc/meminfo` | 内存分配（MemTotal/MemFree/Cached/Swap） |
+| `adb shell procrank` | 各进程内存占用排名 |
+| `adb shell dumpsys cpuinfo` / `top` | CPU 各核心及进程占用 / 实时排行 |
+| `adb shell top -n 1 \| grep <包名>` | 指定应用瞬时 CPU |
+| `adb shell cat /proc/cpuinfo` | CPU 架构、核心数、型号 |
+| `adb shell getprop [ro.build.version.sdk / .release / ro.product.model]` | 系统属性（SDK/版本/型号） |
+| `adb shell setprop <key> <value>` | 设置系统属性 |
+| `adb shell df -h` / `mount` / `cat /proc/partitions` | 磁盘分区 / 挂载 / 分区信息 |
+| `adb shell ifconfig` / `netstat -ntlp` / `ping <IP>` | 网络接口 / 监听端口 / 连通性 |
+| `adb shell cat /sys/class/net/wlan0/address` | WiFi MAC 地址 |
+
+### 1.10 稳定性测试（Monkey）🔧
+
+| 命令 | 功能 |
+| --- | --- |
+| `adb shell monkey -p <package> -v 1000` | 1000 次随机事件压测 |
+| `--throttle 300` | 每次事件间隔 300ms |
+| `--pct-touch 50` | 触摸事件占比 50% |
+| `-s 12345` | 指定随机种子（可复现相同序列） |
+| `... 2>&1 \| tee monkey.log` | 输出并存日志 |
+
+### 1.11 中屏音箱专用 🔧
+
+| 命令 | 功能 |
+| --- | --- |
+| `adb shell getprop persist.csk.ap.version` | 查看 CSK 版本 |
+| `adb shell factory_test get_cmccpwd` / `get_cmei` | 查询写入的密钥 / CMEI（设置中不显示时用） |
+| `adb reboot update` / `adb shell reboot update` | 重启进入烧录模式 |
+| `adb shell mount \| grep system` / `odm` / `vendor` | 分区安全检查（relatime 前不能是 rw；Android11 查 overlay） |
+
+### 1.12 机顶盒安全测试（ADB 相关）🔧
+
+| 命令 | 功能 |
+| --- | --- |
+| `getprop \| grep adb` + `busybox netstat -ntlp` + `adb connect` | ADB 默认关闭检测（出厂 adb 应关） |
+| `adb install <apk>` | 第三方 APK 安装检测（验证是否禁止未签名 APK） |
+| `nmap -p 1-65535 -T4 -A -Pn <IP>` | 端口扫描，检查未知开放端口 |
+
+### 1.13 常用调试组合 ⭐
+
+```bash
+# ① 快速查看设备信息
+adb shell getprop ro.product.model; adb shell getprop ro.build.version.release
+adb shell getprop ro.build.version.sdk; adb shell cat /proc/cpuinfo; adb shell cat /proc/meminfo
+
+# ② 快速定位崩溃
+adb logcat -v time | grep -i "error|crash|fatal|exception"
+adb logcat -b crash -v time
+adb bugreport > bugreport.txt
+
+# ③ 应用调试三板斧
+adb shell am force-stop com.example.app
+adb shell pm clear com.example.app
+adb shell am start -n com.example.app/.MainActivity
+
+# ④ 截图与日志取证
+adb exec-out screencap -p > screen.png
+adb logcat -d -v time > logcat.txt
+adb pull /sdcard/demo.mp4 ./
+
+# ⑤ 无线连接 ADB（设备与电脑同局域网）
+adb connect 192.168.x.x; adb devices; adb shell
+
+# ⑥ Monkey 稳定性测试
+adb shell monkey -p com.example.app -s 12345 --throttle 300 -v 10000 2>&1 | tee monkey.log
+```
 
 ## 二、中兴微方案接入网产品 ⭐
 
@@ -573,3 +739,4 @@ IPv6 测试 DNS：百度 `2400:da00::6666`、谷歌 `2001:4860:4860::8888`。
 - 《应届生试用期能力建设与签核手册.xlsx》Sheet3 —— 经验文档/07 常用测试工具（隐藏页面、内网地址已剔除，向导师索取）
 - 《中兴微平台调试Debug指令大全.md》—— 经验文档/07 常用测试工具（第二节 2.1~2.15 主要来源）
 - 《国内路由器平台WiFi性能测试常用命令集》—— 经验文档/06 性能测试相关总结（写号/WiFi/Mesh/中兴微128R/运营商默认账号）
+- 《ADB调试指令大全.md》—— 经验文档/07 常用测试工具（第一节 1.1~1.13 主要来源；动态密码平台地址与串口密码已剔除，向导师索取）
