@@ -2,9 +2,9 @@
 node_modules/
 
 # VitePress build output & cache
-training-site/docs/.vitepress/dist/
-training-site/docs/.vitepress/cache/
-training-site/docs/.vitepress/.temp/
+**/.vitepress/dist/
+**/.vitepress/cache/
+**/.vitepress/.temp/
 
 # OS / editor
 Thumbs.db
