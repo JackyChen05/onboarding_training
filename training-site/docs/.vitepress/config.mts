@@ -61,7 +61,8 @@ export default defineConfig({
             { text: '3.4 Linux 常用命令', link: '/3-tools/linux' },
             { text: '3.5 版本与缺陷管理工具', link: '/3-tools/defect-tools' },
             { text: '3.6 导师签核清单', link: '/3-tools/signoff' },
-            { text: '3.7 平台调试命令速查', link: '/3-tools/commands' }
+            { text: '3.7 平台调试命令速查', link: '/3-tools/commands' },
+            { text: '3.8 网络性能测试工具（iperf / IxChariot）', link: '/3-tools/network-perf' }
           ]
         }
       ],
